@@ -1,0 +1,1188 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<HEAD>
+<!-- Prevent from cashing -->
+<META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+<META HTTP-EQUIV="cache-control" CONTENT="no-cache">
+<META HTTP-EQUIV="expires" CONTENT="-1">
+</HEAD>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<HEAD>
+
+
+
+
+
+<!-- Prevent from cashing -->
+<META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+<META HTTP-EQUIV="cache-control" CONTENT="no-cache">
+<META HTTP-EQUIV="expires" CONTENT="-1">
+</HEAD>
+
+
+
+
+
+
+
+
+
+
+
+<HTML>
+
+<HEAD>
+<TITLE>帳票一覧</TITLE>
+
+<LINK rel="stylesheet" href="/rv2/RV2.css" type="text/css">
+
+<!-- Report handling JavaScript -->
+
+
+
+
+
+
+
+
+
+
+
+
+<SCRIPT LANGUAGE="JavaScript">
+
+function doOpenWithGen( id, name, bindKind )
+{
+  // create URL
+  var url = "/rv2/servlet/jp.co.canon_sales.rv.viewer.element.reportlist.GenerationController";
+  if( bindKind == 'D' ){
+  	url = "/rv2/servlet/jp.co.canon_sales.rv.viewer.element.reportlist.KprGenerationController";
+  }
+  var paramStart = "?";
+  var paramSeparater = "&";
+  var paramCmd = "cmd=";
+  var paramBinderID = "binderID=";
+
+  url = url
+  + paramStart + paramCmd + "List"
+  + paramSeparater + paramBinderID + id;
+
+  // create arguments
+  var gen;
+  args = new Array();
+  args[0] = id;
+  args[1] = name;
+  args[2] = url;
+
+  // do modal
+  gen = showModalDialog(
+    "/rv2/vwr/report/GenerationFrame.jsp",
+    args,
+    "dialogHeight:"+screen.height*4/5+"px;dialogWidth:"+screen.width*1/2+"px;resizable:yes"
+  );
+
+  doExecuteGenRequest(id,gen);
+}
+
+
+function doOpenWithGenEx( id, name, unreferenced, start, end, bindKind )
+{
+  // create URL
+  var url = "/rv2/servlet/jp.co.canon_sales.rv.viewer.element.reportlist.GenerationController";
+  if( bindKind == 'D' ){
+  	url = "/rv2/servlet/jp.co.canon_sales.rv.viewer.element.reportlist.KprGenerationController";
+  }
+  var paramStart = "?";
+  var paramSeparater = "&";
+  var paramCmd = "cmd=";
+  var paramBinderID = "binderID=";
+  var paramUnreferenced = "unreferenced=";
+  var paramDayStart = "dayStart=";
+  var paramDayEnd = "dayEnd=";
+
+  url = url
+  + paramStart + paramCmd + "List"
+  + paramSeparater + paramBinderID + id
+  + paramSeparater + paramUnreferenced + unreferenced
+  + paramSeparater + paramDayStart + start
+  + paramSeparater + paramDayEnd + end;
+
+  // create arguments
+  var gen;
+  args = new Array();
+  args[0] = id;
+  args[1] = name;
+  args[2] = url;
+  args[3] = unreferenced;
+
+  // do modal
+  gen = showModalDialog(
+    "/rv2/vwr/report/GenerationFrame.jsp",
+    args,
+    "dialogHeight:"+screen.height*4/5+"px;dialogWidth:"+screen.width*1/2+"px;resizable:yes"
+  );
+
+  doExecuteGenRequest(id,gen);
+}
+
+
+function doOpen( id, gen )
+{
+  // create URL
+  var url = "/rv2/servlet/jp.co.canon_sales.rv.viewer.browser.ReportController";
+  var paramStart = "?";
+  var paramSeparater = "&";
+  var paramCmd = "cmd=";
+  var paramBinderID = "binderID=";
+  var paramGen = "gen=";
+
+  url = url
+  + paramStart + paramCmd + "Open"
+  + paramSeparater + paramBinderID + id;
+
+  if (gen != null && gen >= 0) {
+    url = url + paramSeparater + paramGen + gen;
+  }
+
+  // open new window (with title="id")
+  //window.open( url, id );
+  // another new window open whether same report already has opened
+  window.open( url, "" );
+}
+
+
+function doMultipleOpen(form)
+{
+  if( !checkQuantity(form, 'B') ) return;
+  for(var i = 1; i < form.c_SelectItem.length; i++){
+	if (form.c_SelectItem[i].checked) {
+	  doOpen(form.idList[i].value);
+	}
+  }
+}
+
+
+function doMultipleOpenGen(id,genList)
+{
+  for(var i = 1; i < genList.length; i++){
+	  doOpen(id,genList[i]);
+  }
+}
+
+
+function checkQuantity(form, bindKind)
+{
+  var j = 0;
+  var msg_binder = "帳票";
+  if ( bindKind == 'D' ){
+  	msg_binder = "文書";
+  }
+  maxIdx = 10;
+  for (var i = 1; i< form.c_SelectItem.length; i++){
+  	if(form.c_SelectItem[i].checked){
+  		j++;
+  	}
+  }
+  if (j < 1){
+    alert( msg_binder + "が選択されていません。" )
+    return false;
+  }
+  else if (j > maxIdx){
+    alert( "一度に選択できるのは"+ maxIdx + msg_binder + "までです。" );
+    return false;
+  }
+  return true;
+}
+
+
+function selectAll(form,idx)
+{
+  var bSelect = false;
+  if (form.c_SelectAll[idx].checked) bSelect = true;
+  if (idx == 0)
+  	form.c_SelectAll[1].checked = bSelect;
+  else
+  	form.c_SelectAll[0].checked = bSelect;
+  for(var i = 1; i < form.c_SelectItem.length; i++){
+  	form.c_SelectItem[i].checked = bSelect;
+  }
+}
+
+
+function doMultiplePrint(form)
+{
+  if( !checkQuantity(form, 'B' )) return;
+
+  // create URL
+  var url = "/rv2/servlet/jp.co.canon_sales.rv.printer.servlet.print.ClientPrintController";
+  var paramStart = "?";
+  var paramSeparater = "&";
+  var paramCmd = "Cmd=";
+  var paramSubCmd = "SubCmd=";
+  var paramCurDir = "CurDir=";
+  var paramCompIDS = "CompIDS=";
+  var rid = "";
+  var genid = -1;
+  var curDirId = "";
+
+  for(var i = 1; i < form.c_SelectItem.length; i++){
+	if (form.c_SelectItem[i].checked) {
+	    rid = rid + form.idList[i].value + ":" + genid + ",";
+	}
+  }
+  if (form.dirId.value != null && form.dirId.length > 0){
+  	curDirId = form.dirId.value;
+  }
+
+  url = url
+  + paramStart + paramCmd + "List"
+  + paramSeparater + paramSubCmd + "Print"
+  + paramSeparater + paramCurDir + curDirId
+  + paramSeparater + paramCompIDS + rid;
+  window.open( url, "" );
+}
+
+
+function doMultiplePrintGen(id,genList)
+{
+  // create URL
+  var url = "/rv2/servlet/jp.co.canon_sales.rv.printer.servlet.print.ClientPrintController";
+  var paramStart = "?";
+  var paramSeparater = "&";
+  var paramCmd = "Cmd=";
+  var paramSubCmd = "SubCmd=";
+  var paramCompIDS = "CompIDS=";
+  var rid = "";
+
+  for(var i = 1; i < genList.length; i++){
+	    rid = rid + id + ":" + genList[i] + ",";
+  }
+
+  url = url
+  + paramStart + paramCmd + "List"
+  + paramSeparater + paramSubCmd + "Print"
+  + paramSeparater + paramCompIDS + rid;
+  window.open( url, "" );
+}
+
+
+function showPrintStatus()
+{
+  // create URL
+  var url = "/rv2/servlet/jp.co.canon_sales.rv.printer.servlet.printstatus.PrintStatusController";
+  var paramStart = "?";
+  var paramCmd = "Cmd=";
+
+  url = url
+  + paramStart + paramCmd + "List"
+  window.open( url, "" );
+}
+
+
+function doExecuteGenRequest(id,genList)
+{
+  if (genList != null) {
+    var reqId = genList[0];
+    switch (reqId) {
+	  case 1:
+	    doOpen(id,genList[1]);
+        break;
+      case 2:
+        doMultipleOpenGen(id,genList);
+        break;
+	  case 3:
+	    doMultiplePrintGen(id,genList);
+        break;
+	  case 4:
+	    showPrintStatus();
+        break;
+    }
+  }
+}
+
+</SCRIPT>
+<HEAD>
+<!-- Prevent from cashing -->
+<META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+<META HTTP-EQUIV="cache-control" CONTENT="no-cache">
+<META HTTP-EQUIV="expires" CONTENT="-1">
+</HEAD>
+
+
+<SCRIPT LANGUAGE="JavaScript">
+
+
+currentX = 0;
+currentY = 0;
+lastScrollX = 0;
+lastScrollY = 0;
+intervalID = 0;
+timeoutID = 0;
+
+function branding()
+{
+  diffY = document.body.scrollTop;
+  diffX = document.body.scrollLeft;
+
+  if(diffY != lastScrollY) {
+
+    percent = .5 * (diffY - lastScrollY);
+
+    if(percent > 0) percent = Math.ceil(percent);
+    else percent = Math.floor(percent);
+
+    document.getElementById("div_search").style.pixelTop += percent;
+    document.getElementById("div_empbinder").style.pixelTop += percent;
+    lastScrollY = lastScrollY + percent;
+  }
+
+  if(diffX != lastScrollX) {
+
+    percent = .5 * (diffX - lastScrollX);
+
+    if(percent > 0) percent = Math.ceil(percent);
+    else percent = Math.floor(percent);
+
+    document.getElementById("div_search").style.pixelLeft += percent;
+    document.getElementById("div_empbinder").style.pixelLeft += percent;
+    lastScrollX = lastScrollX + percent;
+  }
+}
+
+function doReturn( id )
+{
+  top.returnValue = id;
+
+
+  top.close();
+}
+
+
+function CabInfo( cab, dir, comp )
+{
+  this.cabID  = cab;
+  this.topDirID  = dir;
+  this.compID = comp;
+  this.toString =
+  function () {
+        return (this.cabID+":"+this.topDirID+":"+this.compID);
+  }
+}
+
+
+function doClose()
+{
+  top.returnValue = -1;
+
+
+
+  top.close();
+}
+
+
+
+function doChangeDirectory(form, id)
+{
+  form.cmd.value = "List";
+  form.mode.value = "tree";
+  form.topDirectoryID.value = "139659";
+  form.directoryID.value = id;
+  form.cabinetID.value = "T9";
+  form.target = "_self";
+  form.action = "/rv2/servlet/jp.co.canon_sales.rv.viewer.element.reportlist.ReportTreeController";
+  form.method = "GET";
+  form.submit();
+}
+
+
+function doSort ( form , sortColumn )
+{
+  form.cmd.value = "List";
+  form.mode.value = "tree";
+  form.topDirectoryID.value = "139659";
+  form.directoryID.value = "139659";
+  form.cabinetID.value = "T9";
+  form.target = "_self";
+  form.action = "/rv2/servlet/jp.co.canon_sales.rv.viewer.element.reportlist.ReportTreeController";
+  form.method = "GET";
+
+  form.latestTreeSortColumn.value = sortColumn;
+  // 現在のソート条件
+  form.treeSortColumn.value = "name";
+  form.treeSortDirection.value = " asc";
+
+  form.submit();
+}
+
+
+function doSearch(form)
+{
+  form.acceptType.value = "B";
+  form.mode.value = "single";
+  form.operate.value = "start";// only first access
+  form.action = "/rv2/servlet/jp.co.canon_sales.rv.viewer.element.reportlist.ReportListController";
+  form.targetFormName.value=form.name;
+  form.directoryID.value = 139659;
+  form.target = "_top";
+  form.method = "GET";
+  form.submit();
+}
+
+
+function doAction( id )
+{
+  if( window.parent.dialogMode == "yes" )
+    doReturn( id );
+  else
+    doOpen( id );
+}
+
+
+function doListEmpBinder ( form , sortColumn )
+{
+
+  var empBinder = form.dispEmptyBinder.value;
+  if( empBinder != null ){
+     if( empBinder == "yes" ) {
+        form.dispEmptyBinder.value = "no"
+     }else{
+     	form.dispEmptyBinder.value = "yes"
+     }
+  }
+  form.cmd.value = "List";
+  form.mode.value = "tree";
+  form.topDirectoryID.value = "139659";
+  form.directoryID.value = "139659";
+  form.cabinetID.value = "T9";
+  form.target = "_self";
+  form.action = "/rv2/servlet/jp.co.canon_sales.rv.viewer.element.reportlist.ReportTreeController";
+  form.method = "GET";
+
+  form.latestTreeSortColumn.value = sortColumn;
+  // 現在のソート条件
+  form.treeSortColumn.value = "name";
+  form.treeSortDirection.value = " asc";
+
+  form.submit();
+}
+
+
+function doReference( form )
+{
+  if( window.parent.dialogMode == "yes" )
+    doClose();
+  else
+    doSearch( form );
+}
+
+
+function doGeneration( id, name, bindKind )
+{
+    doOpenWithGen( id, name, bindKind );
+}
+
+
+function getReferenceName()
+{
+  var refName = "";
+  if( window.parent.dialogMode == "yes" ) refName="閉じる";
+  else refName="検索";
+  return (refName);
+}
+
+
+function jumpCurrentDirectory()
+{
+  window.location.hash="#currentDirectory";
+  intervalID = window.setInterval("branding()",1);
+}
+
+function initTimer()
+{
+  setTimeout("jumpCurrentDirectory()",10);
+}
+
+
+function getEmpBinderLinkName(form)
+{
+  var refName = "";
+  if( form.dispEmptyBinder.value == "no" ) refName="空のバインダを表示する";
+  else refName="空のバインダを表示しない";
+  return (refName);
+}
+
+</SCRIPT>
+</HEAD>
+
+<BODY class="noHD" vlink="royalblue" topmargin=3pt onLoad="initTimer()">
+
+<FORM name="tree" target="_self" method="GET">
+
+<!---- Form hiddens ---->
+<!-- for Tree -->
+<INPUT type="hidden" name="cmd" value="List">
+<INPUT type="hidden" name="topDirectoryID" value="139659">
+<INPUT type="hidden" name="directoryID" value="">
+<INPUT type="hidden" name="cabinetID" value="T9">
+<INPUT type="hidden" name="dlg" value="no">
+<INPUT type="hidden" name="seldir" value="null">
+<!-- 2002/02/04 T.Hamano 追加  ReportTree関連ページで参照が許可されるアクセス権をパラメータとしてセットする -->
+<INPUT type="hidden" name="accessbileAction" value="read.view">
+
+<!-- for Search -->
+<INPUT type="hidden" name="operate" value="">
+<INPUT type="hidden" name="acceptType" value="">
+<INPUT type="hidden" name="mode" value="">
+<INPUT type="hidden" name="targetFormName" value="">
+<INPUT type="hidden" name="listSortColumnD" value="name">
+<INPUT type="hidden" name="listSortDirectionD" value=" asc">
+
+<!-- 2003/06/13 for Sort条件 -->
+<INPUT type="hidden" name="latestTreeSortColumn" value="">
+<INPUT type="hidden" name="treeSortColumn" value="name">
+<INPUT type="hidden" name="treeSortDirection" value=" asc">
+<INPUT type="hidden" name="treeSortColumn2" value="">
+<INPUT type="hidden" name="treeSortDirection2" value="">
+
+<!-- 2003/06/13 for Sort条件 -->
+<INPUT type="hidden" name="dispEmptyBinder" value="no">
+<INPUT type="hidden" name="dispEmptyBinderLink" value="yes">
+<!-- 文書バインダ -->
+<INPUT type="hidden" name="dispDocBinder" value="yes">
+
+<!-- 2007/02/19 for 公開オプション -->
+<INPUT type="hidden" name="comeFrom" value="">
+<!-- Search or Close reference -->
+
+<DIV id=div_search align=right style="position:relative; top=5; left=-5;">
+  &nbsp;
+  <A href="#" onClick="doReference(document.tree); return false;">
+  <SCRIPT LANGUAGE="JavaScript">document.write( getReferenceName() );</SCRIPT></A>
+</DIV>
+<BR>
+
+<DIV id=div_empbinder align=right style="position:relative; top=5; left=-5;">
+
+  &nbsp;
+  <A href="#" onClick="doListEmpBinder(document.tree); return false;">
+  <SCRIPT LANGUAGE="JavaScript">document.write( getEmpBinderLinkName(document.tree) );</SCRIPT></A>
+</DIV>
+<BR>
+</FORM>
+
+<FORM name="treeTable" target="_self" method="GET">
+<!---- Form hiddens ---->
+<INPUT type="hidden" name="c_SelectItem" value="">
+<INPUT type="hidden" name="idList" value="">
+<INPUT type="hidden" name="dirId" value="139659">
+
+<!---- Table Zone Start ---->
+
+<TABLE width="95%" class="smallFT" BORDER=0 CELLSPACING=1 CELLPADDING=2>
+<!-- Sort ICON -->
+
+
+
+
+        <COLGROUP class="pad color1">
+      
+    
+        <COLGROUP class="pad color2">
+      
+    
+        <COLGROUP class="pad color1">
+      
+    
+        <COLGROUP class="pad color2">
+      
+    
+        <COLGROUP class="pad color1">
+      
+    
+        <COLGROUP class="pad color2">
+      
+    
+
+
+<!-- Open Button -->
+
+<TR class="bg_none">
+<TD nowrap align="left" colspan="6">
+	
+		<INPUT type="button" value="開く" onClick="doMultipleOpen(document.treeTable)">
+	&nbsp;
+	
+		<INPUT type="button" value="Report Printer経由印刷" disabled>
+	
+</TD>
+</TR>
+
+
+<!-- Table 'Header' Zone -->
+<TR class="index" height=20>
+
+<TD nowrap align=center>
+	
+		<INPUT type="checkbox" name="c_SelectAll" onClick="selectAll(document.treeTable,0)">
+	
+</TD>
+
+<TD class="indent30" nowrap>
+	<A href="javascript:doSort( document.tree , 'name' )"
+		 class="index_link index_visited hover_yellow active_yellow">ＩＤ</A>
+
+  <A href="javascript:doSort( document.tree , 'name' )">
+
+    <IMG src="/rv2/icons/sort_asc.gif" border=0 alt="" class="v_align"></A>
+
+</TD>
+<TD nowrap>
+	<A href="javascript:doSort( document.tree , 'dname' )"
+		 class="index_link index_visited hover_yellow active_yellow">名称</A>
+
+</TD>
+<TD nowrap align=center>世代</TD>
+
+<!-- cloumn banner, public annotation, important level -->
+
+
+<TD nowrap align=center>
+	<A href="javascript:doSort( document.tree , 'crtdt' )"
+		 class="index_link index_visited hover_yellow active_yellow">作成日時</A>
+
+</TD>
+
+
+
+<TD nowrap align=right>ページ&nbsp;</TD>
+
+</TR>
+
+<!-- Table 'Data' Zone -->
+
+
+
+<TR>
+
+
+<!--case directory-->
+
+  <TD nowrap>
+  </TD>
+
+  <TD nowrap STYLE="{text-indent:0;}">
+  <!-- Create Anchor -->
+  
+  <a name="currentDirectory"></a>
+  
+
+  
+  
+    <IMG src="/rv2/icons/openfolder.gif" border="0" alt="" class = "v_align" >
+		T91E_A010
+		</TD>
+		<TD nowrap>
+		T91EA010_滋賀
+		</TD>
+  
+  <TD></TD><TD></TD><TD></TD><TD></TD><TD></TD>
+
+
+</TR>
+
+
+
+<TR>
+
+
+<!--case binder-->
+  
+  
+  
+  <!-- checkbox -->
+  
+  <TD nowrap align=center>
+  	
+		<INPUT type="checkbox" name="c_SelectItem">
+  		<INPUT type="hidden" name="idList" value="139706">
+	
+  </TD>
+  
+  <!--Report Name with icon -->
+  <TD nowrap STYLE="{text-indent:15;}">
+  
+  <A href="#" onClick="doAction('139706'); return false;">
+  <IMG src="/rv2/icons/reports.gif" border="0" alt="" class = "v_align" >
+  SF4-07</A>
+	</TD>
+	<TD nowrap>
+  <A href="#" onClick="doAction('139706'); return false;">
+	自助集約表(原単位)月次確定</A>
+  </TD>
+
+  <!--Report Generation List with icon -->
+  <TD nowrap align=center>
+  
+  	<A HREF="#"
+    	onClick="doGeneration('139706', 'SF4-07  自助集約表(原単位)月次確定', 'B'); return false;">
+    <IMG src="/rv2/icons/generation.gif" border=0 alt=""></A>
+  
+  </TD>
+
+  <!-- Banner --><!-- Public Annotation --><!-- ImportantLevel -->
+  
+
+  <!-- Date -->
+  <TD nowrap>
+  2022/06/08 08:59:15
+  </TD>
+
+  <!-- Comment -->
+
+
+  <!-- Page -->
+  <TD nowrap align=right >
+  
+  2
+  
+  </TD>
+
+
+
+</TR>
+
+
+
+<TR>
+
+
+<!--case binder-->
+  
+  
+  
+  <!-- checkbox -->
+  
+  <TD nowrap align=center>
+  	
+		<INPUT type="checkbox" name="c_SelectItem">
+  		<INPUT type="hidden" name="idList" value="139719">
+	
+  </TD>
+  
+  <!--Report Name with icon -->
+  <TD nowrap STYLE="{text-indent:15;}">
+  
+  <A href="#" onClick="doAction('139719'); return false;">
+  <IMG src="/rv2/icons/reports.gif" border="0" alt="" class = "v_align" >
+  SF4-08</A>
+	</TD>
+	<TD nowrap>
+  <A href="#" onClick="doAction('139719'); return false;">
+	自助集約表(価格)月次確定</A>
+  </TD>
+
+  <!--Report Generation List with icon -->
+  <TD nowrap align=center>
+  
+  	<A HREF="#"
+    	onClick="doGeneration('139719', 'SF4-08  自助集約表(価格)月次確定', 'B'); return false;">
+    <IMG src="/rv2/icons/generation.gif" border=0 alt=""></A>
+  
+  </TD>
+
+  <!-- Banner --><!-- Public Annotation --><!-- ImportantLevel -->
+  
+
+  <!-- Date -->
+  <TD nowrap>
+  2022/06/08 08:59:17
+  </TD>
+
+  <!-- Comment -->
+
+
+  <!-- Page -->
+  <TD nowrap align=right >
+  
+  2
+  
+  </TD>
+
+
+
+</TR>
+
+
+
+<TR>
+
+
+<!--case binder-->
+  
+  
+  
+  <!-- checkbox -->
+  
+  <TD nowrap align=center>
+  	
+		<INPUT type="checkbox" name="c_SelectItem">
+  		<INPUT type="hidden" name="idList" value="139694">
+	
+  </TD>
+  
+  <!--Report Name with icon -->
+  <TD nowrap STYLE="{text-indent:15;}">
+  
+  <A href="#" onClick="doAction('139694'); return false;">
+  <IMG src="/rv2/icons/reports.gif" border="0" alt="" class = "v_align" >
+  SF5-07</A>
+	</TD>
+	<TD nowrap>
+  <A href="#" onClick="doAction('139694'); return false;">
+	自助集約表(原単位)対予算確定</A>
+  </TD>
+
+  <!--Report Generation List with icon -->
+  <TD nowrap align=center>
+  
+  	<A HREF="#"
+    	onClick="doGeneration('139694', 'SF5-07  自助集約表(原単位)対予算確定', 'B'); return false;">
+    <IMG src="/rv2/icons/generation.gif" border=0 alt=""></A>
+  
+  </TD>
+
+  <!-- Banner --><!-- Public Annotation --><!-- ImportantLevel -->
+  
+
+  <!-- Date -->
+  <TD nowrap>
+  2022/04/08 09:00:35
+  </TD>
+
+  <!-- Comment -->
+
+
+  <!-- Page -->
+  <TD nowrap align=right >
+  
+  2
+  
+  </TD>
+
+
+
+</TR>
+
+
+
+<TR>
+
+
+<!--case binder-->
+  
+  
+  
+  <!-- checkbox -->
+  
+  <TD nowrap align=center>
+  	
+		<INPUT type="checkbox" name="c_SelectItem">
+  		<INPUT type="hidden" name="idList" value="139731">
+	
+  </TD>
+  
+  <!--Report Name with icon -->
+  <TD nowrap STYLE="{text-indent:15;}">
+  
+  <A href="#" onClick="doAction('139731'); return false;">
+  <IMG src="/rv2/icons/reports.gif" border="0" alt="" class = "v_align" >
+  SF5-08</A>
+	</TD>
+	<TD nowrap>
+  <A href="#" onClick="doAction('139731'); return false;">
+	自助集約表(価格)対予算確定</A>
+  </TD>
+
+  <!--Report Generation List with icon -->
+  <TD nowrap align=center>
+  
+  	<A HREF="#"
+    	onClick="doGeneration('139731', 'SF5-08  自助集約表(価格)対予算確定', 'B'); return false;">
+    <IMG src="/rv2/icons/generation.gif" border=0 alt=""></A>
+  
+  </TD>
+
+  <!-- Banner --><!-- Public Annotation --><!-- ImportantLevel -->
+  
+
+  <!-- Date -->
+  <TD nowrap>
+  2022/04/08 09:00:35
+  </TD>
+
+  <!-- Comment -->
+
+
+  <!-- Page -->
+  <TD nowrap align=right >
+  
+  2
+  
+  </TD>
+
+
+
+</TR>
+
+
+
+<TR>
+
+
+<!--case binder-->
+  
+  
+  
+  <!-- checkbox -->
+  
+  <TD nowrap align=center>
+  	
+		<INPUT type="checkbox" name="c_SelectItem">
+  		<INPUT type="hidden" name="idList" value="139682">
+	
+  </TD>
+  
+  <!--Report Name with icon -->
+  <TD nowrap STYLE="{text-indent:15;}">
+  
+  <A href="#" onClick="doAction('139682'); return false;">
+  <IMG src="/rv2/icons/reports.gif" border="0" alt="" class = "v_align" >
+  SF7-07</A>
+	</TD>
+	<TD nowrap>
+  <A href="#" onClick="doAction('139682'); return false;">
+	自助集約表(原単位)前年同期確定</A>
+  </TD>
+
+  <!--Report Generation List with icon -->
+  <TD nowrap align=center>
+  
+  	<A HREF="#"
+    	onClick="doGeneration('139682', 'SF7-07  自助集約表(原単位)前年同期確定', 'B'); return false;">
+    <IMG src="/rv2/icons/generation.gif" border=0 alt=""></A>
+  
+  </TD>
+
+  <!-- Banner --><!-- Public Annotation --><!-- ImportantLevel -->
+  
+
+  <!-- Date -->
+  <TD nowrap>
+  2022/04/13 09:01:00
+  </TD>
+
+  <!-- Comment -->
+
+
+  <!-- Page -->
+  <TD nowrap align=right >
+  
+  2
+  
+  </TD>
+
+
+
+</TR>
+
+
+
+<TR>
+
+
+<!--case binder-->
+  
+  
+  
+  <!-- checkbox -->
+  
+  <TD nowrap align=center>
+  	
+		<INPUT type="checkbox" name="c_SelectItem">
+  		<INPUT type="hidden" name="idList" value="139743">
+	
+  </TD>
+  
+  <!--Report Name with icon -->
+  <TD nowrap STYLE="{text-indent:15;}">
+  
+  <A href="#" onClick="doAction('139743'); return false;">
+  <IMG src="/rv2/icons/reports.gif" border="0" alt="" class = "v_align" >
+  SF7-08</A>
+	</TD>
+	<TD nowrap>
+  <A href="#" onClick="doAction('139743'); return false;">
+	自助集約表(価格)前年同期確定</A>
+  </TD>
+
+  <!--Report Generation List with icon -->
+  <TD nowrap align=center>
+  
+  	<A HREF="#"
+    	onClick="doGeneration('139743', 'SF7-08  自助集約表(価格)前年同期確定', 'B'); return false;">
+    <IMG src="/rv2/icons/generation.gif" border=0 alt=""></A>
+  
+  </TD>
+
+  <!-- Banner --><!-- Public Annotation --><!-- ImportantLevel -->
+  
+
+  <!-- Date -->
+  <TD nowrap>
+  2022/04/13 09:01:00
+  </TD>
+
+  <!-- Comment -->
+
+
+  <!-- Page -->
+  <TD nowrap align=right >
+  
+  2
+  
+  </TD>
+
+
+
+</TR>
+
+
+
+<!-- Table 'Footer' Zone -->
+<TR class="index" height=20>
+
+<TD nowrap align=center>
+	
+		<INPUT type="checkbox" name="c_SelectAll" onClick="selectAll(document.treeTable,1)">
+	
+</TD>
+
+<TD class="indent30" nowrap>
+	<A href="javascript:doSort( document.tree , 'name' )"
+		 class="index_link index_visited hover_yellow active_yellow">ＩＤ</A>
+
+  <A href="javascript:doSort( document.tree , 'name' )">
+
+    <IMG src="/rv2/icons/sort_asc.gif" border=0 alt="" class="v_align"></A>
+
+</TD>
+<TD nowrap>
+	<A href="javascript:doSort( document.tree , 'dname' )"
+		 class="index_link index_visited hover_yellow active_yellow">名称</A>
+
+</TD>
+<TD nowrap align=center>世代</TD>
+
+<!-- cloumn banner, public annotation, important level -->
+
+
+<TD nowrap align=center>
+	<A href="javascript:doSort( document.tree , 'crtdt' )"
+		 class="index_link index_visited hover_yellow active_yellow">作成日時</A>
+
+</TD>
+
+
+
+<TD nowrap align=right>ページ&nbsp;</TD>
+</TR>
+
+<!-- Open Button -->
+
+<TR class="bg_none">
+<TD nowrap align="left" colspan="6">
+	
+		<INPUT type="button" value="開く" onClick="doMultipleOpen(document.treeTable)">
+	&nbsp;
+	
+		<INPUT type="button" value="Report Printer経由印刷" disabled>
+	
+</TD>
+</TR>
+
+
+</TABLE>
+<!---- Table Zone end ---->
+
+<BR>
+</CENTER>
+</FORM>
+</BODY>
+</HTML>
+<HEAD>
+<!-- Prevent from cashing -->
+<META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+<META HTTP-EQUIV="cache-control" CONTENT="no-cache">
+<META HTTP-EQUIV="expires" CONTENT="-1">
+</HEAD>
+
